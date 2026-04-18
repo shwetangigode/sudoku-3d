@@ -4,6 +4,8 @@ A beautiful 6×6 Mini Sudoku game with 3D effects, 1000 levels, and paper confet
 
 ![React](https://img.shields.io/badge/React-18-blue) ![Vite](https://img.shields.io/badge/Vite-5-purple) ![Levels](https://img.shields.io/badge/Levels-1000-gold) ![License](https://img.shields.io/badge/License-MIT-green)
 
+https://sudoku-3d.netlify.app/
+
 ## ✨ Features
 
 - **6×6 Sudoku Grid** — Numbers 1–6 with 3×2 box regions
