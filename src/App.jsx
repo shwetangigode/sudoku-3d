@@ -386,10 +386,20 @@ export default function MiniSudoku3D() {
     if (fixed[r][c]) return;
     const newBoard = board.map(row => [...row]);
     newBoard[r][c] = num; setBoard(newBoard); setMoveCount(m => m + 1);
+    
+    // Check all non-fixed cells for errors
     const newErrors = new Set();
-    if (num !== 0 && num !== solved[r][c]) newErrors.add(`${r}-${c}`);
+    for (let ri = 0; ri < SIZE; ri++) {
+      for (let ci = 0; ci < SIZE; ci++) {
+        if (!fixed[ri]?.[ci] && newBoard[ri][ci] !== 0 && newBoard[ri][ci] !== solved[ri]?.[ci]) {
+          newErrors.add(`${ri}-${ci}`);
+        }
+      }
+    }
     setErrors(newErrors);
-    if (num !== 0 && checkWin(newBoard)) triggerWin();
+    
+    // Check win — all cells filled correctly
+    if (newErrors.size === 0 && checkWin(newBoard)) triggerWin();
   };
 
   const handleHint = () => {
@@ -410,6 +420,14 @@ export default function MiniSudoku3D() {
   const [levelPage, setLevelPage] = useState(0);
   const LEVELS_PER_PAGE = 50;
   const totalPages = MAX_LEVEL / LEVELS_PER_PAGE;
+
+  // Highest unlocked level = highest completed + 1 (or 1 if none completed)
+  const highestUnlocked = useMemo(() => {
+    if (completedLevels.size === 0) return 1;
+    let max = 0;
+    completedLevels.forEach(l => { if (l > max) max = l; });
+    return Math.min(max + 1, MAX_LEVEL);
+  }, [completedLevels]);
 
   const highlightCells = useMemo(() => {
     if (!selected) return new Set();
@@ -556,9 +574,20 @@ export default function MiniSudoku3D() {
                     const lvl = levelPage * LEVELS_PER_PAGE + i + 1;
                     if (lvl > MAX_LEVEL) return null;
                     const done = completedLevels.has(lvl), current = lvl === level;
+                    const unlocked = lvl <= highestUnlocked;
+                    const locked = !unlocked;
                     return (
-                      <button key={lvl} onClick={() => initLevel(lvl)} style={{ fontFamily: "'Rajdhani'", fontSize: 13, fontWeight: 600, padding: "6px 0", borderRadius: 7, cursor: "pointer", background: current ? "#FFD70033" : done ? "#4ECDC411" : "#ffffff08", color: current ? "#FFD700" : done ? "#4ECDC4" : "#ffffff55", border: current ? "1px solid #FFD70044" : done ? "1px solid #4ECDC422" : "1px solid #ffffff10", transition: "all 0.15s ease" }}>
-                        {done ? "✓" : ""}{lvl}
+                      <button key={lvl} onClick={() => { if (unlocked) initLevel(lvl); }} style={{
+                        fontFamily: "'Rajdhani'", fontSize: 13, fontWeight: 600, padding: "6px 0", borderRadius: 7,
+                        cursor: locked ? "not-allowed" : "pointer",
+                        opacity: locked ? 0.35 : 1,
+                        background: current ? "#FFD70033" : done ? "#4ECDC411" : locked ? "#ffffff04" : "#ffffff08",
+                        color: current ? "#FFD700" : done ? "#4ECDC4" : locked ? "#ffffff22" : "#ffffff55",
+                        border: current ? "1px solid #FFD70044" : done ? "1px solid #4ECDC422" : "1px solid #ffffff10",
+                        transition: "all 0.15s ease",
+                        position: "relative"
+                      }}>
+                        {locked ? "🔒" : done ? "✓" : ""}{!locked ? lvl : ""}
                       </button>
                     );
                   })}
